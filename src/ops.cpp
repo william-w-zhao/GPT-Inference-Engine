@@ -4,9 +4,9 @@
 #include <numbers>
 
 #include "weights.h"
+#include "ops.h"
 
-// input: out, token ids, wte, wpe, input size in tokens, embedding size
-void embedding(float *out, int32_t *tok_ids, float *wte, float *wpe, int tok_size, int emb_size)
+void embedding(float *out, const int32_t *tok_ids, const float *wte, const float *wpe, int tok_size, int emb_size)
 {
     for (int t = 0; t < tok_size; t++)
     {
@@ -20,7 +20,6 @@ void embedding(float *out, int32_t *tok_ids, float *wte, float *wpe, int tok_siz
     }
 }
 
-// input: out, x, weights, bias, input size in tokens, embedding size
 void layer_norm(float *out, const float *x, const float *weights, const float *bias, int tok_size, int emb_size)
 {
     const float eps = 1e-5f;
@@ -55,41 +54,69 @@ void layer_norm(float *out, const float *x, const float *weights, const float *b
     }
 }
 
-// xW + b
-// input: out, x, weights, bias, input size in tokens, embedding size
-void linear(float *out, const float *x, const float *weights, const float *bias, int tok_size, int emb_size)
+void causal_attention(float *out, float *attn_weights, const float *q, const float *k, const float *v, int tok_size, int emb_size, int n_head)
 {
-    matmul(out, x, weights, tok_size, emb_size, emb_size);
-    for (int t = 0; t < tok_size; t++)
+    const int head_size = emb_size / n_head;
+    const float scale = 1.0f / std::sqrt((float)head_size);
+
+    // for each attention head
+    for (int h = 0; h < n_head; h++)
     {
-        float *ot = out + (size_t)t * emb_size;
-        for (int i = 0; i < emb_size; i++)
+        // for each token
+        for (int t = 0; t < tok_size; t++)
         {
-            ot[i] += bias[i];
+            const float *qt = q + (size_t)t * emb_size + h * head_size;
+            // causal mask
+            for (int i = 0; i <= t; i++)
+            {
+                const float *kt = k + (size_t)i * emb_size + h * head_size;
+                float dot = 0.0f;
+                for (int d = 0; d < head_size; d++)
+                {
+                    dot += qt[d] * kt[d];
+                }
+                attn_weights[i] = dot * scale;
+            }
+            softmax(attn_weights, t + 1);
+
+            float *ot = out + (size_t)t * emb_size + h * head_size;
+            for (int d = 0; d < head_size; d++)
+            {
+                float sum = 0.0f;
+                for (int i = 0; i <= t; i++)
+                    sum += attn_weights[i] * v[(size_t)i * emb_size + h * head_size + d];
+                ot[d] = sum;
+            }
         }
     }
 }
 
-// input: out, x, weights, bias, input size in tokens, embedding size
 void GELU(float *x, int n)
 {
+    const float sqrt = std::sqrt(2.0f / 3.14159265358979f);
     for (int i = 0; i < n; i++)
     {
-        const float sqrt = std::sqrt(2.0f / 3.14159265358979f);
         const float hyp_tan = std::tanh(sqrt * (x[i] + 0.044715f * x[i] * x[i] * x[i]));
         x[i] = 0.5f * x[i] * (1.0f + hyp_tan);
     }
 }
 
-// input: out, x, weights, bias, input size in tokens, embedding size
 void softmax(float *x, int n)
 {
     const float e = std::exp(1.0);
 
+    float max = x[0];
+
+    // prevent infinity overflow
+    for (int i = 1; i < n; i++)
+    {
+        max = std::max(max, x[i]);
+    }
+
     float sum = 0.0f;
     for (int i = 0; i < n; i++)
     {
-        x[i] = std::pow(e, x[i]);
+        x[i] = std::exp(x[i] - max);
         sum += x[i];
     }
 
@@ -99,8 +126,19 @@ void softmax(float *x, int n)
     }
 }
 
-// input: out, x, weights, bias, input size in tokens, embedding size
-// output = [M x P] = a x b = [M x N] x [N x P]
+void linear(float *out, const float *x, const float *weights, const float *bias, int tok_size, int in_dim, int out_dim)
+{
+    matmul(out, x, weights, tok_size, in_dim, out_dim);
+    for (int t = 0; t < tok_size; t++)
+    {
+        float *ot = out + (size_t)t * out_dim;
+        for (int i = 0; i < out_dim; i++)
+        {
+            ot[i] += bias[i];
+        }
+    }
+}
+
 void matmul(float *out, const float *a, const float *b, int M, int N, int P)
 {
     // compute dot product for each row of A, column of B
@@ -114,6 +152,23 @@ void matmul(float *out, const float *a, const float *b, int M, int N, int P)
                 sum += a[(size_t)i * N + k] * b[(size_t)k * P + j];
             }
             out[(size_t)i * P + j] = sum;
+        }
+    }
+}
+
+void add(float *x, const float *y, int n)
+{
+    for (int i = 0; i < n; i++)
+        x[i] += y[i];
+}
+
+void transpose(float *out, const float *x, int rows, int cols)
+{
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            out[(size_t)j * rows + i] = x[(size_t)i * cols + j];
         }
     }
 }

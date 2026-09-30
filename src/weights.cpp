@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "weights.h"
+#include "ops.h"
 
 // input: file
 GPTConfig read_header(std::ifstream &f)
@@ -61,6 +62,9 @@ GPTWeights load_weights(std::string &path)
     read_tensor(f, gpt.wte_weights, vocab_size * emb_size);
     read_tensor(f, gpt.wpe_weights, context_window * emb_size);
 
+    gpt.wte_weights_transposed.resize(vocab_size * emb_size);
+    transpose(gpt.wte_weights_transposed.data(), gpt.wte_weights.data(), vocab_size, emb_size);
+
     for (TransformerLayer &l : gpt.layers)
     {
         read_tensor(f, l.ln1_weights, emb_size);
@@ -80,10 +84,10 @@ GPTWeights load_weights(std::string &path)
         read_tensor(f, l.ln2_weights, emb_size);
         read_tensor(f, l.ln2_bias, emb_size);
 
-        read_tensor(f, l.mlp_fc_weights, emb_size * (feed_forward * emb_size));
-        read_tensor(f, l.mlp_fc_bias, (feed_forward * emb_size));
+        read_tensor(f, l.mlp_fc_weights, feed_forward * emb_size);
+        read_tensor(f, l.mlp_fc_bias, feed_forward);
 
-        read_tensor(f, l.mlp_proj_weights, (feed_forward * emb_size) * emb_size);
+        read_tensor(f, l.mlp_proj_weights, feed_forward * emb_size);
         read_tensor(f, l.mlp_proj_bias, emb_size);
     }
 

@@ -1,6 +1,7 @@
 #ifndef WEIGHTS_H
 #define WEIGHTS_H
 
+#include <string>
 #include <vector>
 
 struct TransformerLayer
@@ -43,7 +44,9 @@ struct GPTWeights
     GPTConfig config;
 
     std::vector<float> wte_weights; // [50257, 768]
-    std::vector<float> wpe_weights; // [1024, 768]
+    // required to generate logits
+    std::vector<float> wte_weights_transposed; // [768, 50257]
+    std::vector<float> wpe_weights;            // [1024, 768]
 
     std::vector<TransformerLayer> layers;
 
@@ -51,6 +54,6 @@ struct GPTWeights
     std::vector<float> lnf_bias;    // [768]
 };
 
-GPTWeights load_weights(char *path);
+GPTWeights load_weights(std::string &path);
 
 #endif
