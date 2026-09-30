@@ -4,6 +4,6 @@
 #include "activations.h"
 #include "weights.h"
 
-void attention_forward(float *out, Activations &act, float *x, TransformerLayer &l, int tok_size, int emb_size, int n_head);
+void attention_forward(float *out, Activations &act, float *k_cache, float *v_cache, float *x, TransformerLayer &l, int new_tok_size, int emb_size, int n_head, int pos);
 
 #endif

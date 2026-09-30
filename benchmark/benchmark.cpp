@@ -29,13 +29,13 @@ void measure_prefill(GPTWeights &gpt, Activations &act, int tok_size, int k)
     for (int i = 0; i < tok_size; i++)
         tok_ids[i] = i;
 
-    forward(gpt, act, tok_ids.data(), tok_size);
+    forward(gpt, act, tok_ids.data(), tok_size, 0);
 
     std::vector<double> times;
     for (int i = 0; i < k; i++)
     {
         auto t0 = Clock::now();
-        forward(gpt, act, tok_ids.data(), tok_size);
+        forward(gpt, act, tok_ids.data(), tok_size, 0);
         times.push_back(ms_since(t0));
     }
 
@@ -48,13 +48,15 @@ void measure_decode(GPTWeights &gpt, Activations &act, int steps)
 {
     std::vector<int32_t> tok_ids = {464, 3797, 3332, 319, 262};
 
+    forward(gpt, act, tok_ids.data(), (int)tok_ids.size(), 0);
+
     std::vector<double> times;
     for (int step = 0; step < steps; step++)
     {
         auto t0 = Clock::now();
-        forward(gpt, act, tok_ids.data(), (int)tok_ids.size());
-        int next = std::max_element(act.logits.begin(), act.logits.end()) - act.logits.begin();
+        int32_t next = std::max_element(act.logits.begin(), act.logits.end()) - act.logits.begin();
         tok_ids.push_back(next);
+        forward(gpt, act, &next, 1, (int)tok_ids.size() - 1);
         times.push_back(ms_since(t0));
     }
 

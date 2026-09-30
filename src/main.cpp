@@ -20,23 +20,20 @@ int main()
     std::string vocab_path = "models/vocab.bin";
     std::vector<std::string> vocab = load_vocab(vocab_path);
 
+    forward(gpt, act, tok_ids.data(), (int)tok_ids.size(), 0);
+
     const int max_steps = 10;
     for (int step = 0; step < max_steps; step++)
     {
+        int32_t next = std::max_element(act.logits.begin(), act.logits.end()) - act.logits.begin();
+        std::cout << vocab[next] << std::flush;
+        tok_ids.push_back(next);
 
-        if (tok_ids.size() > config.context_window)
+        int pos = (int)tok_ids.size() - 1;
+        if (pos >= config.context_window)
         {
             break;
         }
-
-        forward(gpt, act, tok_ids.data(), (int)tok_ids.size());
-
-        // argmax
-        int next_tok = std::max_element(act.logits.begin(), act.logits.end()) - act.logits.begin();
-
-        tok_ids.push_back(next_tok);
-        std::cout << vocab[next_tok] << std::flush;
+        forward(gpt, act, &next, 1, pos);
     }
-
-    return 0;
 }

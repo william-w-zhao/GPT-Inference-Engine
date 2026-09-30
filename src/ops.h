@@ -5,7 +5,7 @@
 
 // input: out, token ids, wte, wpe, input size in tokens, embedding size
 // output: token represented by token embedding and position embedding
-void embedding(float *out, const int32_t *tok_ids, const float *wte, const float *wpe, int tok_size, int emb_size);
+void embedding(float *out, const int32_t *tok_ids, const float *wte, const float *wpe, int tok_size, int emb_size, int pos);
 
 // input: out, x, weights, bias, input size in tokens, embedding size
 // output: normalized x, with mean 0 and variance 1, combined with affine transformation
@@ -13,7 +13,7 @@ void layer_norm(float *out, const float *x, const float *weights, const float *b
 
 // input: out, dot-product buffer, q, k, v, input size in tokens, embedding size, number of attention heads
 // output: weighted sum of values, weights are softmaxed dot-products of query and key values
-void causal_attention(float *out, float *attn_weights, const float *q, const float *k, const float *v, int tok_size, int emb_size, int n_head);
+void causal_attention(float *out, float *attn_weights, const float *q, const float *k_cache, const float *v_cache, int new_tok_size, int emb_size, int n_head, int pos);
 
 // input: x, input size
 // output: GELU-applied to x, in-place

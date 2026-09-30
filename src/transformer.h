@@ -6,6 +6,6 @@
 #include "activations.h"
 #include "weights.h"
 
-void forward(GPTWeights &gpt, Activations &act, const int32_t *tok_ids, int tok_size);
+void forward(GPTWeights &gpt, Activations &act, const int32_t *tok_ids, int tok_size, int pos);
 
 #endif

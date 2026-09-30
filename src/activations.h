@@ -13,10 +13,9 @@ struct Activations
     std::vector<float> ln;
     // query
     std::vector<float> q;
-    // key
-    std::vector<float> k;
-    // value
-    std::vector<float> v;
+    // KV caching
+    std::vector<float> k_cache;
+    std::vector<float> v_cache;
     // query, value dot products
     std::vector<float> attn_weights;
     // attention output
@@ -31,8 +30,8 @@ struct Activations
     Activations(GPTConfig &config) : x(config.context_window * config.n_embd),
                                      ln(config.context_window * config.n_embd),
                                      q(config.context_window * config.n_embd),
-                                     k(config.context_window * config.n_embd),
-                                     v(config.context_window * config.n_embd),
+                                     k_cache((size_t)config.n_layer * config.context_window * config.n_embd),
+                                     v_cache((size_t)config.n_layer * config.context_window * config.n_embd),
                                      attn_weights(config.context_window),
                                      attn(config.context_window * config.n_embd),
                                      mlp_hidden(config.context_window * 4 * config.n_embd),
