@@ -1,8 +1,8 @@
+#include "tokenizer.h"
+
 #include <cstdint>
 #include <fstream>
 #include <stdexcept>
-
-#include "tokenizer.h"
 
 std::vector<std::string> load_vocab(std::string &path)
 {

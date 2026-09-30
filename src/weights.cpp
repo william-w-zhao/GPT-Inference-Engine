@@ -1,10 +1,11 @@
+#include "weights.h"
+
 #include <cstdint>
 #include <fstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-#include "weights.h"
 #include "ops.h"
 
 // input: file

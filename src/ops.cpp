@@ -1,10 +1,8 @@
+#include "ops.h"
+
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <vector>
-#include <numbers>
-
-#include "weights.h"
-#include "ops.h"
 
 void embedding(float *out, const int32_t *tok_ids, const float *wte, const float *wpe, int tok_size, int emb_size)
 {

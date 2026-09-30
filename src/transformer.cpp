@@ -1,6 +1,10 @@
+#include "transformer.h"
+
 #include <stdexcept>
 
-#include "transformer.h"
+#include "attention.h"
+#include "mlp.h"
+#include "ops.h"
 
 void forward(GPTWeights &gpt, Activations &act, const int32_t *tok_ids, int tok_size)
 {

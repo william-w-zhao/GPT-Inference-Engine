@@ -1,5 +1,7 @@
 #include "attention.h"
 
+#include "ops.h"
+
 void attention_forward(float *out, Activations &act, float *x, TransformerLayer &l, int tok_size, int emb_size, int n_head)
 {
     linear(act.q.data(), x, l.q_weights.data(), l.q_bias.data(), tok_size, emb_size, emb_size);

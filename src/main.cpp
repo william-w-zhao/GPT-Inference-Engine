@@ -1,11 +1,9 @@
 #include <algorithm>
 #include <cstdio>
 #include <iostream>
-#include <numeric>
 #include <string>
-#include <vector>
 
-#include "ops.h"
+#include "activations.h"
 #include "tokenizer.h"
 #include "transformer.h"
 #include "weights.h"
