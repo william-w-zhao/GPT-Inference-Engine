@@ -103,8 +103,6 @@ void GELU(float *x, int n)
 
 void softmax(float *x, int n)
 {
-    const float e = std::exp(1.0);
-
     float max = x[0];
 
     // prevent infinity overflow

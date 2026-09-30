@@ -5,21 +5,36 @@ from transformers import GPT2Tokenizer, GPT2Model
 def write_to_file(tensor, f):
     tensor.cpu().detach().numpy().astype(np.float32).tofile(f)
 
+# output: dict of char-byte
+def byte_decoder():
+    byte_vals = list(range(ord("!"), ord("~") + 1)) + list(range(ord("¡"), ord("¬") + 1)) + list(range(ord("®"), ord("ÿ") + 1))
+    unicode_vals = byte_vals[:]
+
+    n = 0
+    for b in range(256):
+        if b not in byte_vals:
+            byte_vals.append(b)
+            unicode_vals.append(256 + n)
+            n += 1
+
+    return {chr(c): b for b, c in zip(byte_vals, unicode_vals)}
+
 def main(): 
     current_dir = os.path.dirname(os.path.abspath(__file__))
     root_dir = os.path.dirname(current_dir)
     output_dir = os.path.join(root_dir, "models")
     os.makedirs(output_dir, exist_ok=True)
-    output_path = os.path.join(output_dir, "weights.bin")
 
     print("Loading model for GPT2...")
     model = GPT2Model.from_pretrained('gpt2')
     state = model.state_dict()
     config = model.config
 
+    print("Exporting weights onto bin file...")
+    output_path = os.path.join(output_dir, "weights.bin")
     with open(output_path, 'wb') as f:
         # header to store model information
-        print("Exporting config header onto bin file...")
+        print("Exporting header...")
         header = np.zeros(256, dtype=np.int32)
         header[0] = config.vocab_size
         header[1] = config.n_positions
@@ -28,7 +43,7 @@ def main():
         header[4] = config.n_embd
         header.tofile(f)
          
-        print("Exporting weights onto bin file...")
+        print("Exporting weights...")
         # word token embedding weights and word position embedding weights
         write_to_file(state['wte.weight'], f)
         write_to_file(state['wpe.weight'], f)
@@ -66,6 +81,18 @@ def main():
 
     print("Loading tokenizer for GPT2...")
     tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+
+    print("Exporting vocab onto bin file...")
+    vocab_path = os.path.join(output_dir, "vocab.bin")
+    decoder = byte_decoder()
+    with open(vocab_path, "wb") as f:
+        np.array([len(tokenizer)], dtype=np.int32).tofile(f)
+        for i in range(len(tokenizer)):
+            token = tokenizer.convert_ids_to_tokens(i)
+            # byte-pair decoding
+            byte_representation = bytes(decoder[c] for c in token)
+            np.array([len(byte_representation)], dtype=np.int32).tofile(f)
+            f.write(byte_representation)
 
 if __name__ == "__main__":
     main()
