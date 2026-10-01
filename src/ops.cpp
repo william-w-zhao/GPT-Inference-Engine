@@ -138,17 +138,27 @@ void linear(float *out, const float *x, const float *weights, const float *bias,
 
 void matmul(float *out, const float *a, const float *b, int M, int N, int P)
 {
-    // compute dot product for each row of A, column of B
+    // for each row of a
     for (int i = 0; i < M; i++)
     {
+        float *oi = out + (size_t)i * P;
+        // for each column of b
         for (int j = 0; j < P; j++)
         {
-            float sum = 0.0f;
-            for (int k = 0; k < N; k++)
+            oi[j] = 0.0f;
+        }
+        // for each column of a, row of b
+        for (int k = 0; k < N; k++)
+        {
+            // value at [i, k] of a
+            const float ak = a[(size_t)i * N + k];
+            // row k of b
+            const float *bk = b + (size_t)k * P;
+            // for each value in row k of b
+            for (int j = 0; j < P; j++)
             {
-                sum += a[(size_t)i * N + k] * b[(size_t)k * P + j];
+                oi[j] += ak * bk[j];
             }
-            out[(size_t)i * P + j] = sum;
         }
     }
 }
