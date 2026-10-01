@@ -1,6 +1,6 @@
 ## GPT Inference Engine
 
-This model is a C++ implementation of a GPT-2 inference engine, with ~124M weights loaded from HuggingFace. No libraries are used
+This is a C++ implementation of a GPT-2 inference engine, with ~124M weights loaded from HuggingFace. No libraries are used
 in this implementation, but all transformer processes, attention, MLP, KV-caching, and tokenizer decoding are all implemented
 through editing registers of floats.
 
