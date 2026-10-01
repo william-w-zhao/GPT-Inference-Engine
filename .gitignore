@@ -1,3 +1,5 @@
 models/weights.bin
 models/vocab.bin
 .DS_Store
+gpt
+bench_gpt
